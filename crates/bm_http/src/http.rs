@@ -12,11 +12,10 @@ use tokio_util::sync::CancellationToken;
 use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 
-use super::{admin, api1, health, service};
+use super::{api1, health, service};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-	admin: admin::Config,
 	api1: api1::Config,
 
 	address: Option<IpAddr>,
@@ -55,7 +54,6 @@ pub async fn serve(
 	};
 
 	let router = Router::new()
-		.nest("/admin", admin::router(config.admin, state.clone()))
 		.nest("/api/1", api1::router(config.api1, state.clone()))
 		.nest("/health", health::router(state))
 		.layer(
