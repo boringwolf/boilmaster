@@ -1,9 +1,10 @@
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use anyhow::Context;
 use figment::{
 	Figment,
 	providers::{Env, Format, Toml},
+	value::magic::RelativePathBuf,
 };
 use futures::FutureExt;
 use serde::Deserialize;
@@ -14,7 +15,7 @@ mod tracing;
 
 #[derive(Debug, Deserialize)]
 pub struct GameConfig {
-	directory: PathBuf,
+	directory: RelativePathBuf,
 }
 
 #[derive(Debug, Deserialize)]

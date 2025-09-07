@@ -1,28 +1,26 @@
 use std::{
-	path::{Path, PathBuf},
+	path::Path,
 	str::FromStr,
 	sync::{Arc, RwLock},
 };
 
 use bm_version::VersionKey;
-use ironworks::{
-	Ironworks,
-	excel::Excel,
-	sqpack::{Install, SqPack},
-};
+use ironworks::{Ironworks, excel::Excel, sqpack::SqPack};
 use tokio::sync::watch;
 
-use super::error::{Error, Result};
+use crate::error::{Error, Result};
+use crate::install::Install;
+use figment::value::magic::RelativePathBuf;
 
 pub struct Data {
 	channel: watch::Sender<Vec<VersionKey>>,
 	version: Arc<RwLock<Option<Arc<Version>>>>,
 	version_key: VersionKey,
-	game_dir: PathBuf,
+	game_dir: RelativePathBuf,
 }
 
 impl Data {
-	pub fn new(game_dir: PathBuf) -> Self {
+	pub fn new(game_dir: RelativePathBuf) -> Self {
 		let (sender, _receiver) = watch::channel(vec![]);
 
 		Data {
@@ -44,7 +42,8 @@ impl Data {
 
 	/// Initialize with a single version using filesystem data
 	pub fn initialize(&self) -> Result<()> {
-		let version = Version::new(&self.game_dir)?;
+		let game_dir = self.game_dir.relative();
+		let version = Version::new(&game_dir)?;
 
 		*self.version.write().expect("poisoned") = Some(Arc::new(version));
 
