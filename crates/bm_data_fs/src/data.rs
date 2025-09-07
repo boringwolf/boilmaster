@@ -1,0 +1,104 @@
+use std::{
+	collections::HashMap,
+	path::{Path, PathBuf},
+	str::FromStr,
+	sync::{Arc, RwLock},
+};
+
+use bm_version::VersionKey;
+use ironworks::{
+	Ironworks,
+	excel::Excel,
+	sqpack::{Install, SqPack},
+};
+use tokio::sync::watch;
+
+use super::error::{Error, Result};
+
+pub struct Data {
+	channel: watch::Sender<Vec<VersionKey>>,
+	versions: RwLock<HashMap<VersionKey, Arc<Version>>>,
+	game_dir: PathBuf,
+}
+
+impl Data {
+	pub fn new(game_dir: PathBuf) -> Self {
+		let (sender, _receiver) = watch::channel(vec![]);
+
+		Data {
+			channel: sender,
+			versions: Default::default(),
+			game_dir,
+		}
+	}
+
+	pub fn ready(&self) -> bool {
+		self.versions.read().expect("poisoned").len() > 0
+	}
+
+	pub fn subscribe(&self) -> watch::Receiver<Vec<VersionKey>> {
+		self.channel.subscribe()
+	}
+
+	/// Initialize with a single version using filesystem data
+	pub fn initialize(&self) -> Result<()> {
+		// Create a simple version key for filesystem data
+		let version_key = VersionKey::from_str("0000000000000001").unwrap();
+
+		let version = Version::new(&self.game_dir)?;
+
+		self.versions
+			.write()
+			.expect("poisoned")
+			.insert(version_key, Arc::new(version));
+
+		// Broadcast the version list
+		self.broadcast_version_list();
+
+		Ok(())
+	}
+
+	pub fn version(&self, version: VersionKey) -> Result<Arc<Version>> {
+		let versions = self.versions.read().expect("poisoned");
+
+		versions
+			.get(&version)
+			.ok_or_else(|| Error::UnknownVersion(version))
+			.cloned()
+	}
+
+	fn broadcast_version_list(&self) {
+		let versions = self.versions.read().expect("poisoned");
+		let keys = versions.keys().copied().collect::<Vec<_>>();
+
+		self.channel.send_if_modified(|value| {
+			if &keys != value {
+				*value = keys;
+				return true;
+			}
+			false
+		});
+	}
+}
+
+pub struct Version {
+	ironworks: Arc<Ironworks>,
+	excel: Arc<Excel>,
+}
+
+impl Version {
+	fn new(game_dir: &Path) -> Result<Self> {
+		let install = Install::at(game_dir);
+		let ironworks = Arc::new(Ironworks::new().with_resource(SqPack::new(install)));
+		let excel = Arc::new(Excel::new(ironworks.clone()));
+		Ok(Self { ironworks, excel })
+	}
+
+	pub fn ironworks(&self) -> Arc<Ironworks> {
+		self.ironworks.clone()
+	}
+
+	pub fn excel(&self) -> Arc<Excel> {
+		self.excel.clone()
+	}
+}
