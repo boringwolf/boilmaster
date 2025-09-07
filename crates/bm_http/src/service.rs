@@ -5,7 +5,6 @@ pub type Data = Arc<bm_data::Data>;
 pub type Read = Arc<bm_read::Read>;
 pub type Schema = Arc<bm_schema::Provider>;
 pub type Search = Arc<bm_search::Search>;
-pub type Version = Arc<bm_version::Manager>;
 
 #[derive(Clone)]
 pub struct Service {
@@ -14,5 +13,4 @@ pub struct Service {
 	pub read: Read,
 	pub schema: Schema,
 	pub search: Search,
-	pub version: Version,
 }

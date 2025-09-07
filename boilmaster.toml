@@ -39,6 +39,9 @@ default = "en"
 # This default configuration is set up for the global game client, which does not ship Chinese or Korean data.
 exclude = ["chs", "cht", "kr"]
 
+[game]
+directory = "data"
+
 [version]
 interval = 3600 # 1 hour
 directory = "versions"

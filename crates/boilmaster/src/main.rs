@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use anyhow::Context;
 use figment::{
@@ -13,13 +13,20 @@ use tokio_util::sync::CancellationToken;
 mod tracing;
 
 #[derive(Debug, Deserialize)]
+pub struct GameConfig {
+	directory: PathBuf,
+}
+
+#[derive(Debug, Deserialize)]
 struct Config {
 	// tracing: tracing::Config, - read individually.
 	http: bm_http::Config,
 	read: bm_read::Config,
-	version: bm_version::Config,
 	schema: bm_schema::Config,
 	search: bm_search::Config,
+
+	// New filesystem-based config
+	game: GameConfig,
 }
 
 #[tokio::main]
@@ -44,10 +51,10 @@ async fn main() -> anyhow::Result<()> {
 		.extract::<Config>()
 		.context("failed to extract config")?;
 
-	let version = Arc::new(
-		bm_version::Manager::new(config.version).context("failed to create version manager")?,
-	);
-	let data = Arc::new(bm_data::Data::new());
+	let data = Arc::new(bm_data::Data::new(config.game.directory));
+	data.initialize()
+		.context("failed to initialize data service")?;
+
 	let asset = Arc::new(bm_asset::Service::new(data.clone()));
 	let read = Arc::new(bm_read::Read::new(config.read));
 	let schema = Arc::new(
@@ -63,11 +70,6 @@ async fn main() -> anyhow::Result<()> {
 	let shutdown_token = shutdown_token();
 
 	tokio::try_join!(
-		version
-			.start(shutdown_token.clone())
-			.map(|result| result.context("version service")),
-		data.start(shutdown_token.clone(), &version)
-			.map(|result| result.context("data service")),
 		schema
 			.start(shutdown_token.clone())
 			.map(|result| result.context("schema service")),
@@ -82,7 +84,6 @@ async fn main() -> anyhow::Result<()> {
 			read,
 			schema.clone(),
 			search.clone(),
-			version.clone(),
 		),
 	)
 	.context("failed to start server")?;

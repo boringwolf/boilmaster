@@ -36,7 +36,6 @@ pub async fn serve(
 	read: service::Read,
 	schema: service::Schema,
 	search: service::Search,
-	version: service::Version,
 ) -> Result<()> {
 	let bind_address = SocketAddr::new(
 		config.address.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
@@ -52,7 +51,6 @@ pub async fn serve(
 			read,
 			schema,
 			search,
-			version,
 		},
 	};
 

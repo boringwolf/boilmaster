@@ -1,5 +1,4 @@
 use std::{
-	collections::HashMap,
 	path::{Path, PathBuf},
 	str::FromStr,
 	sync::{Arc, RwLock},
@@ -17,7 +16,8 @@ use super::error::{Error, Result};
 
 pub struct Data {
 	channel: watch::Sender<Vec<VersionKey>>,
-	versions: RwLock<HashMap<VersionKey, Arc<Version>>>,
+	version: Arc<RwLock<Option<Arc<Version>>>>,
+	version_key: VersionKey,
 	game_dir: PathBuf,
 }
 
@@ -27,13 +27,15 @@ impl Data {
 
 		Data {
 			channel: sender,
-			versions: Default::default(),
+			version: Arc::new(RwLock::new(None)),
+			// Use a constant version key
+			version_key: VersionKey::from_str("0000000000000001").unwrap(),
 			game_dir,
 		}
 	}
 
 	pub fn ready(&self) -> bool {
-		self.versions.read().expect("poisoned").len() > 0
+		self.version.read().expect("poisoned").is_some()
 	}
 
 	pub fn subscribe(&self) -> watch::Receiver<Vec<VersionKey>> {
@@ -42,15 +44,9 @@ impl Data {
 
 	/// Initialize with a single version using filesystem data
 	pub fn initialize(&self) -> Result<()> {
-		// Create a simple version key for filesystem data
-		let version_key = VersionKey::from_str("0000000000000001").unwrap();
-
 		let version = Version::new(&self.game_dir)?;
 
-		self.versions
-			.write()
-			.expect("poisoned")
-			.insert(version_key, Arc::new(version));
+		*self.version.write().expect("poisoned") = Some(Arc::new(version));
 
 		// Broadcast the version list
 		self.broadcast_version_list();
@@ -58,18 +54,20 @@ impl Data {
 		Ok(())
 	}
 
-	pub fn version(&self, version: VersionKey) -> Result<Arc<Version>> {
-		let versions = self.versions.read().expect("poisoned");
+	pub fn version_key(&self) -> VersionKey {
+		self.version_key
+	}
 
-		versions
-			.get(&version)
+	pub fn version(&self, version: VersionKey) -> Result<Arc<Version>> {
+		self.version
+			.read()
+			.expect("poisoned")
+			.clone()
 			.ok_or_else(|| Error::UnknownVersion(version))
-			.cloned()
 	}
 
 	fn broadcast_version_list(&self) {
-		let versions = self.versions.read().expect("poisoned");
-		let keys = versions.keys().copied().collect::<Vec<_>>();
+		let keys = vec![self.version_key];
 
 		self.channel.send_if_modified(|value| {
 			if &keys != value {
