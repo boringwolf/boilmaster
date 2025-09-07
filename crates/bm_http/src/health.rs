@@ -22,12 +22,10 @@ async fn ready(
 		data,
 		schema,
 		search,
-		version,
 		..
 	}): State<Service>,
 ) -> impl IntoResponse {
-	let ready =
-		asset.ready() && data.ready() && schema.ready() && search.ready() && version.ready();
+	let ready = asset.ready() && data.ready() && schema.ready() && search.ready();
 	match ready {
 		true => (StatusCode::OK, "READY"),
 		false => (StatusCode::SERVICE_UNAVAILABLE, "PENDING"),

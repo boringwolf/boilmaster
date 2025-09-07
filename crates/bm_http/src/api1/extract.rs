@@ -1,27 +1,16 @@
 use aide::OperationIo;
 use axum::{
-	RequestPartsExt,
 	extract::{FromRef, FromRequestParts},
 	http::request::Parts,
 };
 use bm_version::VersionKey;
-use schemars::JsonSchema;
-use serde::Deserialize;
 
 use crate::service::Service;
 
 use super::error::Error;
 
-/// # VersionQuery
-/// Query parameters accepted by endpoints that interact with versioned game data.
-#[derive(Deserialize, JsonSchema)]
-struct VersionQueryParams {
-	/// Game version to utilise for this query.
-	version: Option<String>,
-}
-
 #[derive(OperationIo)]
-#[aide(input_with = "Query<VersionQueryParams>")]
+#[aide(input_with = "Query<()>")]
 pub struct VersionQuery(pub VersionKey);
 
 impl<S> FromRequestParts<S> for VersionQuery
@@ -31,23 +20,9 @@ where
 {
 	type Rejection = Error;
 
-	async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-		let Query(params) = parts
-			.extract::<Query<VersionQueryParams>>()
-			.await
-			.map_err(|error| Error::Invalid(error.to_string()))?;
-
-		let Service { version, .. } = Service::from_ref(state);
-
-		let version_name = params.version.as_deref();
-		let version_key = version.resolve(version_name).ok_or_else(|| {
-			Error::Invalid(format!(
-				"unknown version \"{}\"",
-				version_name.unwrap_or("(none)")
-			))
-		})?;
-
-		Ok(Self(version_key))
+	async fn from_request_parts(_parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+		let Service { data, .. } = Service::from_ref(state);
+		Ok(Self(data.version_key()))
 	}
 }
 

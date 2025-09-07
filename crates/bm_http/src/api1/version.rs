@@ -51,14 +51,6 @@ fn versions_docs(operation: TransformOperation) -> TransformOperation {
 }
 
 #[debug_handler(state = ApiState)]
-async fn versions(State(Service { version, .. }): State<Service>) -> Json<VersionsResponse> {
-	let mut names = version.all_names();
-	names.sort_unstable();
-
-	let metadata = names
-		.into_iter()
-		.map(|name| VersionMetadata { names: vec![name] })
-		.collect();
-
-	Json(VersionsResponse { versions: metadata })
+async fn versions(State(Service { .. }): State<Service>) -> Json<VersionsResponse> {
+	Json(VersionsResponse { versions: vec![] })
 }
