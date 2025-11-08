@@ -53,6 +53,13 @@ ENV BM_SCHEMA_EXDSCHEMA_DIRECTORY="/app/persist/exdschema"
 ENV BM_VERSION_DIRECTORY="/app/persist/versions"
 ENV BM_SEARCH_SQLITE_DIRECTORY="/app/persist/search"
 
+# CAFE: define excluded languages
+ENV BM_READ_LANGUAGE_EXCLUDE="[ja,en,de,fr,cht,kr]"
+
+# CAFE: use game directory instead of version
+ENV BM_GAME_DIRECTORY="/app/game"
+VOLUME /app/game
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y git curl
