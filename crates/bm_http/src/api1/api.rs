@@ -16,13 +16,12 @@ use tower_http::cors::CorsLayer;
 
 use crate::{http::HttpState, service::Service};
 
-use super::{asset, read::RowReaderState, search, sheet, version};
+use super::{read::RowReaderState, search, sheet};
 
 const OPENAPI_JSON_ROUTE: &str = "/openapi.json";
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-	asset: asset::Config,
 	search: search::Config,
 	sheet: sheet::Config,
 }
@@ -43,20 +42,12 @@ pub fn router(config: Config, state: HttpState) -> Router {
 
 	ApiRouter::new()
 		.nest(
-			"/asset",
-			asset::router(config.asset, state.clone()).with_path_items(|item| item.tag("assets")),
-		)
-		.nest(
 			"/search",
 			search::router(config.search, state.clone()).with_path_items(|item| item.tag("search")),
 		)
 		.nest(
 			"/sheet",
 			sheet::router(config.sheet, state.clone()).with_path_items(|item| item.tag("sheets")),
-		)
-		.nest(
-			"/version",
-			version::router(state).with_path_items(|item| item.tag("versions")),
 		)
 		.finish_api_with(&mut openapi, api_docs)
 		.route(
@@ -74,23 +65,18 @@ fn api_docs(api: TransformOpenApi) -> TransformOpenApi {
 		.title("boilmaster")
 		.version(git_version!(prefix = "1-", fallback = "unknown"))
 		.tag(openapi::Tag {
-			name: "assets".into(),
-			description: Some("Endpoints for accessing game data on a file-by-file basis. Commonly useful for fetching icons or other textures to display on the web.".into()),
-			..Default::default()
-		})
-		.tag(openapi::Tag {
 			name: "search".into(),
-			description: Some("Endpoints for seaching and filtering the game's static relational data store.".into()),
+			description: Some(
+				"Endpoints for seaching and filtering the game's static relational data store."
+					.into(),
+			),
 			..Default::default()
 		})
 		.tag(openapi::Tag {
 			name: "sheets".into(),
-			description: Some("Endpoints for reading data from the game's static relational data store.".into()),
-			..Default::default()
-		})
-		.tag(openapi::Tag {
-			name: "versions".into(),
-			description: Some("Endpoints for querying metadata about the versions recorded by the boilmaster system.".into()),
+			description: Some(
+				"Endpoints for reading data from the game's static relational data store.".into(),
+			),
 			..Default::default()
 		});
 
