@@ -57,7 +57,7 @@ pub async fn serve(
 	};
 
 	let router = Router::new()
-		.nest("/api/1", api1::router(config.api1, state.clone()))
+		.nest("/api", api1::router(config.api1, state.clone()))
 		.nest("/health", health::router(state))
 		.fallback_service(ServeDir::new(directory))
 		.layer(
