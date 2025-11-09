@@ -55,6 +55,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Generate datetime tag in yyyyMMddHHiiss format
+      - name: Generate datetime tag
+        id: datetime
+        run: |
+          echo "DATETIME=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
       # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -63,6 +69,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             latest-${{ matrix.platform.os_name }}
+            ${{ steps.datetime.outputs.DATETIME }}-${{ matrix.platform.os_name }}
             type=sha
 
       # Make QEMU available for the final arm image creation

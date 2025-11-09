@@ -5,6 +5,8 @@ use axum::{
 	Router,
 	extract::{FromRef, MatchedPath},
 	http::Request,
+	response::Redirect,
+	routing::get,
 };
 use serde::Deserialize;
 use tokio::net::TcpListener;
@@ -54,6 +56,10 @@ pub async fn serve(
 	};
 
 	let router = Router::new()
+		.route(
+			"/",
+			get(|| async { Redirect::to("https://thewakingsands.github.io/xivapi-v2/") }),
+		)
 		.nest("/api/1", api1::router(config.api1, state.clone()))
 		.nest("/health", health::router(state))
 		.layer(
