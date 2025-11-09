@@ -1,70 +1,58 @@
-# Mark XIV Thermocoil Boilmaster
+# Boilmaster (ffcafe fork)
 
-Web service for Final Fantasy XIV game data and asset discovery.
+Web service for Final Fantasy XIV game data and asset discovery, forked from [ackwell](https://github.com/ackwell/boilmaster) by FFCafe.
+
+## Notes for API Users
+
+We maintain an instance of Boilmaster at <https://xivapi-v2.xivcdn.com/> and provide Chinese-accelerated access.
+
+You can use it to serve Chinese users, but note the following differences:
+
+* We provide game data in the following languages: Chinese, Japanese, English, German, and French.
+* All version-related functionalities are disabled. The `version` parameter in the URL will not be handled.
+* No asset retrieval features are available. API endpoints starting with `/api/asset` will return 404 due to the high cost of hosting assets.
 
 ## Installation
 
-### Building From Source
-
-**Requirements**
-
-<!-- NOTE: See /rust-toolchain.toml when updating. -->
-
-- [Rust](https://www.rust-lang.org/tools/install) >= 1.85.0
-
-```bash
-git clone https://github.com/ackwell/boilmaster
-cd boilmaster
-cargo run --release
-```
-
 ### Docker Usage
 
-boilmaster is published as a Docker image on the github container registery. An example `docker-compose.yml` such as the below can be used to bring the service online.
+Boilmaster is published as a Docker image on the GitHub Container Registry. An example `docker-compose.yml` file like the one below can be used to bring the service online.
 
 ```yml
 services:
   boilmaster:
-    image: ghcr.io/ackwell/boilmaster:latest
+    image: ghcr.io/thewakingsands/boilmaster:latest
     container_name: boilmaster
     environment:
       # Other configuration here, see the Configuration section below for more information.
     volumes:
       - ${PWD}/persist:/app/persist
+      - /path/to/your/game:/app/game:ro
     ports:
       - 8080:8080
     restart: unless-stopped
 ```
 
-## Configuration
+### Exd files
 
-The default configuration for boilmaster can be found in `boilmaster.toml`. This file can be considered a source of truth for all configuration options available.
+We use external data files instead of tracking all patches of the game. The following files should be present in the `game` directory
+(or mounted to `/app/game` when using Docker):
 
-In addition to the configuration file, all options may also be set via environment variables. The name of these variables is the same as their path in TOML; replacing `.` with `_`, in uppercase, with the prefix `BM_`. i.e. the config file key `http.api1.sheet.limit.default` can be set with the environment variable `BM_HTTP_API1_SHEET_LIMIT_DEFAULT`.
-
-Configuration is only read during application startup, a restart is required if changes are made.
-
-Before exposing the service to the public, it is strongly advised to change the `http.admin.auth.username` and `http.admin.auth.password` values.
-
-## Differences compared to original version
-
-- Use external data files instead of tracking all patches of the game. Following files should be present in `game` directory
-  (or mounted to `/app/game` when using docker):
-  - ffxivgame.ver
-  - sqpack/ffxiv/0a0000.win32.dat
-  - sqpack/ffxiv/0a0000.win32.index
-  - sqpack/ffxiv/0a0000.win32.index2
-- All version related functionalities are disabled. The version param will not be handled.
+* ffxivgame.ver
+* sqpack/ffxiv/0a0000.win32.dat
+* sqpack/ffxiv/0a0000.win32.index
+* sqpack/ffxiv/0a0000.win32.index2
 
 ### Switching supported languages
 
-Multi-language queries could be achieved with `exd build` command of [ixion](https://github.com/thewakingsands/ixion), which could generate a merged sqpack file from different servers. Set environment variable `BM_READ_LANGUAGE_EXCLUDE` for different setups. For example:
+Multi-language queries can be achieved with the `exd build` command of [ixion](https://github.com/thewakingsands/ixion), which generates a merged sqpack file from different servers.
+Set the environment variable `BM_READ_LANGUAGE_EXCLUDE` for different setups. For example:
 
-- Global: `[chs,cht,kr]`
-- SDO: `[ja,en,de,fr,cht,kr]`
-- Combination of Global and SDO: `[cht,kr]`
+* Global: `[chs,cht,kr]`
+* SDO: `[ja,en,de,fr,cht,kr]`
+* Combination of Global and SDO: `[cht,kr]`
 
-Test language support with following path:
+Test language support with the following path:
 
 ```
 /api/1/sheet/Item/1?fields=Name@lang(chs),Name@lang(de),Name@lang(en),Name@lang(fr),Name@lang(ja)
