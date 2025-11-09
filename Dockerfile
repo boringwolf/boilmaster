@@ -60,6 +60,10 @@ ENV BM_READ_LANGUAGE_EXCLUDE="[ja,en,de,fr,cht,kr]"
 ENV BM_GAME_DIRECTORY="/app/game"
 VOLUME /app/game
 
+# CAFE: serve static files
+ENV BM_HTTP_DIRECTORY="/app/static"
+VOLUME /app/static
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y git curl

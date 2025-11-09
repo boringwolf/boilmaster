@@ -5,12 +5,11 @@ use axum::{
 	Router,
 	extract::{FromRef, MatchedPath},
 	http::Request,
-	response::Redirect,
-	routing::get,
 };
 use serde::Deserialize;
 use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
+use tower_http::services::ServeDir;
 use tower_http::trace::{DefaultOnFailure, DefaultOnRequest, DefaultOnResponse, TraceLayer};
 use tracing::Level;
 
@@ -22,6 +21,7 @@ pub struct Config {
 
 	address: Option<IpAddr>,
 	port: u16,
+	directory: Option<String>,
 }
 
 #[derive(Clone, FromRef)]
@@ -42,6 +42,7 @@ pub async fn serve(
 		config.address.unwrap_or(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
 		config.port,
 	);
+	let directory = config.directory.unwrap_or_else(|| "static".into());
 
 	tracing::info!("http binding to {bind_address:?}");
 
@@ -56,12 +57,9 @@ pub async fn serve(
 	};
 
 	let router = Router::new()
-		.route(
-			"/",
-			get(|| async { Redirect::to("https://thewakingsands.github.io/xivapi-v2/") }),
-		)
 		.nest("/api/1", api1::router(config.api1, state.clone()))
 		.nest("/health", health::router(state))
+		.fallback_service(ServeDir::new(directory))
 		.layer(
 			TraceLayer::new_for_http()
 				// Add the matched route path to the spans.

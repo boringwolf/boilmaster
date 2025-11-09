@@ -10,6 +10,7 @@ filters.hyper = "info"
 [http]
 # address = "0.0.0.0"
 port = 8080
+directory = "static"
 
 [http.admin.auth]
 username = "username"
