@@ -24,6 +24,7 @@ impl fmt::Display for LanguageString {
 			Language::French => "fr",
 			Language::ChineseSimplified => "chs",
 			Language::ChineseTraditional => "cht",
+			Language::ChineseTraditional2 => "tc",
 			Language::Korean => "ko",
 			_ => &format!("unk{}", u8::from(self.0)),
 		};
@@ -55,6 +56,7 @@ impl FromStr for LanguageString {
 			"fr" => Language::French,
 			"chs" => Language::ChineseSimplified,
 			"cht" => Language::ChineseTraditional,
+			"tc" => Language::ChineseTraditional2,
 			"ko" => Language::Korean,
 			other => other
 				.strip_prefix("unk")
