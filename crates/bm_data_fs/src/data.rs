@@ -27,7 +27,14 @@ impl Data {
 			channel: sender,
 			version: Arc::new(RwLock::new(None)),
 			// Use a constant version key
-			version_key: VersionKey::from_str("0000000000000001").unwrap(),
+			version_key: {
+				// Convert RelativePathBuf to Path and append ffxivgame.ver
+				let ver_path = game_dir.relative().join("ffxivgame.ver");
+				let ver_str = std::fs::read_to_string(&ver_path)
+					.expect(&format!("Failed to read {:?}", ver_path));
+				let key_str: String = ver_str.chars().filter(|c| c.is_ascii_digit()).collect();
+				VersionKey::from_str(&key_str).expect("Invalid version key in ffxivgame.ver")
+			},
 			game_dir,
 		}
 	}
