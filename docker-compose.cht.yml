@@ -1,17 +1,15 @@
 services:
-  boilmaster:
+  boilmaster-cht:
     image: ghcr.io/boringwolf/boilmaster:cht
-    container_name: boilmaster
+    container_name: boilmaster-cht
     restart: unless-stopped
     ports:
-      - "8084:8080"
+      - "8085:8080" # 對應到 8085 連接埠
     volumes:
-      - ./game:/app/game:ro
-      - ./persist:/app/persist
+      - ./game_cht:/app/game:ro      # 使用獨立的遊戲資料夾
+      - ./persist_cht:/app/persist   # 使用獨立的數據存放區
     environment:
       - BM_GAME_DIRECTORY=/app/game
-      # According to your boilmaster.toml configuration
       - BM_READ_LANGUAGE_EXCLUDE=[chs,ko]
       - BM_READ_LANGUAGE_DEFAULT=ja
-      # Ensure schema updates work
       - BM_SCHEMA_EXDSCHEMA_REMOTE=https://github.com/xivdev/EXDSchema.git
