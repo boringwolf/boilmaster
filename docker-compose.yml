@@ -1,0 +1,17 @@
+services:
+  boilmaster:
+    image: ghcr.io/boringwolf/boilmaster:latest
+    container_name: boilmaster
+    restart: unless-stopped
+    ports:
+      - "8084:8080"
+    volumes:
+      - ./game:/app/game:ro
+      - ./persist:/app/persist
+    environment:
+      - BM_GAME_DIRECTORY=/app/game
+      # According to your boilmaster.toml configuration
+      - BM_READ_LANGUAGE_EXCLUDE=[chs,ko]
+      - BM_READ_LANGUAGE_DEFAULT=cht
+      # Ensure schema updates work
+      - BM_SCHEMA_EXDSCHEMA_REMOTE=https://github.com/xivdev/EXDSchema.git

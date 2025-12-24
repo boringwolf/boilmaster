@@ -36,7 +36,7 @@ entry.fields.exdschema = "*"
 entry.transient.exdschema = "*"
 
 [read.language]
-default = "tc"
+default = "cht"
 # This default configuration is set up for the global game client, which does not ship Chinese or Korean data.
 exclude = ["chs","ko"]
 
