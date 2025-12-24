@@ -77,7 +77,7 @@ default = "exdschema"
 interval = 3600       # 1 hour
 
 [schema.exdschema]
-default = "2:ver:request"
+default = "2:rev:af7ddaaed0b45f60afb50b9f93e1ebafb47f9d5a"
 remote = "https://github.com/xivdev/EXDSchema.git"
 directory = "exdschema"
 
