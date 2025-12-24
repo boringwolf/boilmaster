@@ -68,6 +68,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=ref,event=branch
             latest-${{ matrix.platform.os_name }}
             ${{ steps.datetime.outputs.DATETIME }}-${{ matrix.platform.os_name }}
             type=sha
